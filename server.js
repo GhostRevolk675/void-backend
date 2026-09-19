@@ -28,10 +28,8 @@ app.post('/api/auth/register', (req, res) => {
       username: req.body.username || 'GhostRevo',
       created_at: new Date().toISOString()
     },
-    tokens: {
-      access_token: 'fake-access-token-123',
-      refresh_token: 'fake-refresh-token-456'
-    }
+    access_token: 'fake-access-token-123',
+    refresh_token: 'fake-refresh-token-456'
   });
 });
 
@@ -44,10 +42,8 @@ app.post('/api/auth/login', (req, res) => {
       username: req.body.username || 'GhostRevo',
       last_seen: new Date().toISOString()
     },
-    tokens: {
-      access_token: 'fake-access-token-123',
-      refresh_token: 'fake-refresh-token-456'
-    }
+    access_token: 'fake-access-token-123',
+    refresh_token: 'fake-refresh-token-456'
   });
 });
 

@@ -524,19 +524,30 @@ io.on('connection', (socket) => {
   });
 });
 
-// Limpar mensagens expiradas a cada minuto
+// Limpar mensagens expiradas a cada 5 segundos
 setInterval(async () => {
   try {
     const result = await pool.query(
-      'DELETE FROM messages WHERE expires_at IS NOT NULL AND expires_at < CURRENT_TIMESTAMP'
+      `DELETE FROM messages
+       WHERE expires_at IS NOT NULL AND expires_at < CURRENT_TIMESTAMP
+       RETURNING id, conversation_id`
     );
+
     if (result.rowCount > 0) {
       console.log(`🗑️  ${result.rowCount} mensagens expiradas removidas`);
+
+      // Notificar via WebSocket sobre cada mensagem expirada
+      result.rows.forEach(row => {
+        io.to(`conversation_${row.conversation_id}`).emit('message_expired', {
+          message_id: row.id.toString(),
+          conversation_id: row.conversation_id.toString()
+        });
+      });
     }
   } catch (error) {
     console.error('Erro ao limpar mensagens:', error);
   }
-}, 60000);
+}, 5000);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {

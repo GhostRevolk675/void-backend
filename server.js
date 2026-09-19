@@ -27,7 +27,8 @@ app.post('/api/auth/register', (req, res) => {
       id: '1',
       username: req.body.username || 'GhostRevo',
       public_key: req.body.public_key || 'public_key_placeholder',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      is_active: true
     },
     access_token: 'fake-access-token-123',
     refresh_token: 'fake-refresh-token-456'
@@ -42,7 +43,8 @@ app.post('/api/auth/login', (req, res) => {
       id: '1',
       username: req.body.username || 'GhostRevo',
       public_key: 'public_key_placeholder_' + (req.body.username || 'GhostRevo'),
-      last_seen: new Date().toISOString()
+      last_seen_at: new Date().toISOString(),
+      is_active: true
     },
     access_token: 'fake-access-token-123',
     refresh_token: 'fake-refresh-token-456'

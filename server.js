@@ -382,21 +382,32 @@ app.post('/api/conversations', authenticateToken, async (req, res) => {
 app.get('/api/conversations', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT DISTINCT ON (c.id)
+      `SELECT
          c.id,
          u.id as recipient_id,
          u.username as recipient_username,
          u.public_key as recipient_public_key,
          u.last_seen_at as recipient_last_seen,
-         m.content as last_message,
-         m.created_at as last_message_at
+         u.is_active as recipient_is_active,
+         (
+           SELECT m.content
+           FROM messages m
+           WHERE m.conversation_id = c.id
+           ORDER BY m.created_at DESC
+           LIMIT 1
+         ) as last_message,
+         (
+           SELECT m.created_at
+           FROM messages m
+           WHERE m.conversation_id = c.id
+           ORDER BY m.created_at DESC
+           LIMIT 1
+         ) as last_message_at
        FROM conversations c
-       JOIN conversation_participants cp ON c.id = cp.conversation_id
-       JOIN conversation_participants cp2 ON c.id = cp2.conversation_id AND cp2.user_id != cp.user_id
+       JOIN conversation_participants cp ON c.id = cp.conversation_id AND cp.user_id = $1
+       JOIN conversation_participants cp2 ON c.id = cp2.conversation_id AND cp2.user_id != $1
        JOIN users u ON cp2.user_id = u.id
-       LEFT JOIN messages m ON m.conversation_id = c.id
-       WHERE cp.user_id = $1
-       ORDER BY c.id, m.created_at DESC`,
+       ORDER BY last_message_at DESC NULLS LAST`,
       [req.user.id]
     );
 
@@ -407,7 +418,8 @@ app.get('/api/conversations', authenticateToken, async (req, res) => {
           id: row.recipient_id.toString(),
           username: row.recipient_username,
           public_key: row.recipient_public_key,
-          last_seen_at: row.recipient_last_seen
+          last_seen_at: row.recipient_last_seen,
+          is_active: row.recipient_is_active
         },
         last_message: row.last_message,
         last_message_at: row.last_message_at
